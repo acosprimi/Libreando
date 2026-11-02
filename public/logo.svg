@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Logo de Entrelíneas">
+  <rect width="64" height="64" rx="14" fill="#1f5d4a"/>
+  <path d="M14 20 C22 17 28 19 32 23 V48 C28 44 22 42 14 45 Z" fill="#ffffff"/>
+  <path d="M50 20 C42 17 36 19 32 23 V48 C36 44 42 42 50 45 Z" fill="#e9efe9"/>
+  <path d="M38 12 h8 v17 l-4 -3.5 l-4 3.5 z" fill="#d9363e"/>
+</svg>

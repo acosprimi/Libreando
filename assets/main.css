@@ -1,0 +1,4 @@
+/* Único CSS propio: letra con serifa para los títulos */
+h1, h2, h3, .v-app-bar-title {
+  font-family: 'Fraunces', Georgia, serif !important;
+}
