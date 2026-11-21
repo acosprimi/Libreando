@@ -1,17 +1,16 @@
 <script setup>
-import { computed } from 'vue'
+import { ref } from 'vue'
 
-const props = defineProps({
-  items: { type: Array, required: true }, // cada elemento: { producto, cantidad }
-  abierto: { type: Boolean, default: false }, // ¿el panel está abierto?
+defineProps({
+  abierto: { type: Boolean, default: false },
 })
-const emit = defineEmits(['incrementar', 'decrementar', 'eliminar', 'finalizar-compra', 'cerrar'])
+const emit = defineEmits(['finalizar-compra', 'cerrar'])
+const carritoStore = useCarritoStore()
+const { detalleLineas, cantidadItems, subtotalSinDescuento, total, descuentos, estaVacio } = storeToRefs(carritoStore)
+const errorCarrito = ref('')
 
-// Si el panel se cierra (clic afuera), le avisamos al padre
 function alCambiar(visible) {
-  if (visible === false) {
-    emit('cerrar')
-  }
+  if (visible === false) emit('cerrar')
 }
 
 function valorConDescuento(producto) {
@@ -21,25 +20,9 @@ function valorConDescuento(producto) {
 const formatoCOP = (numero) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(numero)
 
-// Total sin descuento
-const subtotalSinDescuento = computed(() => {
-  let suma = 0
-  for (const item of props.items) {
-    suma = suma + item.producto.valor * item.cantidad
-  }
-  return suma
-})
-
-// Total con descuento (lo que paga el cliente)
-const total = computed(() => {
-  let suma = 0
-  for (const item of props.items) {
-    suma = suma + valorConDescuento(item.producto) * item.cantidad
-  }
-  return suma
-})
-
-const descuentos = computed(() => subtotalSinDescuento.value - total.value)
+function incrementar(productoId) {
+  errorCarrito.value = carritoStore.incrementar(productoId)
+}
 </script>
 
 <template>
@@ -52,35 +35,39 @@ const descuentos = computed(() => subtotalSinDescuento.value - total.value)
     <v-divider />
 
     <!-- Carrito vacío -->
-    <v-card-text v-if="items.length === 0">
+    <v-card-text v-if="estaVacio">
       El carrito está vacío.
     </v-card-text>
 
     <!-- Un renglón por producto -->
     <v-list v-else class="flex-grow-1 overflow-y-auto">
-      <v-list-item v-for="item in items" :key="item.producto.id">
+      <v-list-item v-for="item in detalleLineas" :key="item.productoId">
         <template #prepend>
           <v-img :src="item.producto.imagen" width="50" height="70" class="mr-3" />
         </template>
 
         <v-list-item-title class="text-wrap">{{ item.producto.descripcion }}</v-list-item-title>
-        <v-list-item-subtitle>{{ formatoCOP(valorConDescuento(item.producto)) }} c/u</v-list-item-subtitle>
+        <v-list-item-subtitle>{{ formatoCOP(item.valorConDescuento) }} c/u · {{ item.stock }} disponibles</v-list-item-subtitle>
 
         <div class="d-flex align-center mt-2">
-          <v-btn size="small" :disabled="item.cantidad === 1" @click="emit('decrementar', item.producto.id)">−</v-btn>
+          <v-btn size="small" :disabled="item.cantidad === 1" @click="carritoStore.decrementar(item.productoId)">−</v-btn>
           <strong class="mx-3">{{ item.cantidad }}</strong>
-          <v-btn size="small" @click="emit('incrementar', item.producto.id)">+</v-btn>
-          <v-btn size="small" color="error" variant="text" class="ml-3" @click="emit('eliminar', item.producto.id)">
+          <v-btn size="small" :disabled="item.cantidad >= item.stock" @click="incrementar(item.productoId)">+</v-btn>
+          <v-btn size="small" color="error" variant="text" class="ml-3" @click="carritoStore.quitar(item.productoId)">
             Quitar
           </v-btn>
         </div>
 
         <!-- Subtotal del renglón: precio × cantidad -->
         <template #append>
-          <strong>{{ formatoCOP(valorConDescuento(item.producto) * item.cantidad) }}</strong>
+          <strong>{{ formatoCOP(item.subtotal) }}</strong>
         </template>
       </v-list-item>
     </v-list>
+
+    <v-alert v-if="errorCarrito" type="error" density="compact" class="mx-4">
+      {{ errorCarrito }}
+    </v-alert>
 
     <v-card-text>
       <div>Subtotal sin descuento: {{ formatoCOP(subtotalSinDescuento) }}</div>
@@ -89,7 +76,7 @@ const descuentos = computed(() => subtotalSinDescuento.value - total.value)
     </v-card-text>
 
     <v-card-actions class="mt-auto">
-      <v-btn block color="primary" variant="flat" size="large" :disabled="items.length === 0" @click="emit('finalizar-compra')">
+      <v-btn block color="primary" variant="flat" size="large" :disabled="estaVacio" @click="emit('finalizar-compra')">
         Finalizar compra
       </v-btn>
     </v-card-actions>

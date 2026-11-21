@@ -1,10 +1,12 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
   producto: { type: Object, required: true },
 })
-const emit = defineEmits(['agregar-al-carrito'])
+const carritoStore = useCarritoStore()
+const errorAgregar = ref('')
+const cantidadEnCarrito = computed(() => carritoStore.cantidadPorProducto(props.producto.id))
 
 // valorConDescuento = valor × (1 − descuento / 100)
 const valorConDescuento = computed(() => {
@@ -14,6 +16,17 @@ const valorConDescuento = computed(() => {
 // Muestra los números como pesos colombianos
 const formatoCOP = (numero) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(numero)
+
+function agregarAlCarrito() {
+  const error = carritoStore.agregar(props.producto.id)
+  if (error) {
+    errorAgregar.value = error
+    return
+  }
+
+  errorAgregar.value = ''
+  new Audio('/agregar.wav').play()
+}
 </script>
 
 <template>
@@ -29,6 +42,7 @@ const formatoCOP = (numero) =>
     <v-card-title class="text-wrap text-subtitle-1 font-weight-bold">{{ producto.descripcion }}</v-card-title>
 
     <v-card-text class="mt-auto">
+      <div class="text-medium-emphasis">Disponibles: {{ producto.stock }}</div>
       <!-- Valor del producto (tachado si hay descuento) -->
       <div v-if="producto.descuento > 0" class="text-decoration-line-through">
         {{ formatoCOP(producto.valor) }}
@@ -41,9 +55,18 @@ const formatoCOP = (numero) =>
 
     <v-card-actions>
       <!-- Botón de compra: avisa al padre y le envía el producto -->
-      <v-btn block color="primary" variant="flat" @click="emit('agregar-al-carrito', producto)">
+      <v-btn
+        block
+        color="primary"
+        variant="flat"
+        :disabled="cantidadEnCarrito >= producto.stock"
+        @click="agregarAlCarrito"
+      >
         Comprar
       </v-btn>
     </v-card-actions>
+    <v-alert v-if="errorAgregar" type="error" density="compact" class="ma-3 mt-0">
+      {{ errorAgregar }}
+    </v-alert>
   </v-card>
 </template>

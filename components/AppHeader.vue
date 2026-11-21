@@ -1,13 +1,29 @@
 <script setup>
-// Props: datos que llegan del padre
+import { ref, onBeforeUnmount } from 'vue'
+
 defineProps({
   nombreTienda: { type: String, required: true },
-  cantidadItems: { type: Number, default: 0 },
-  musicaActiva: { type: Boolean, default: false },
 })
 
-// Emits: avisos que el hijo le envía al padre
-const emit = defineEmits(['ver-carrito', 'alternar-musica'])
+const emit = defineEmits(['ver-carrito'])
+const carritoStore = useCarritoStore()
+const { cantidadItems } = storeToRefs(carritoStore)
+const musicaActiva = ref(false)
+let audioMusica = null
+
+function alternarMusica() {
+  if (!audioMusica) {
+    audioMusica = new Audio('/musica.wav')
+    audioMusica.loop = true
+    audioMusica.volume = 0.3
+  }
+
+  musicaActiva.value = !musicaActiva.value
+  if (musicaActiva.value) audioMusica.play()
+  else audioMusica.pause()
+}
+
+onBeforeUnmount(() => audioMusica?.pause())
 </script>
 
 <template>
@@ -15,7 +31,7 @@ const emit = defineEmits(['ver-carrito', 'alternar-musica'])
     <img src="/logo.svg" alt="Logo" width="38" height="38" class="ml-4 mr-2" />
     <v-app-bar-title class="font-weight-bold">{{ nombreTienda }}</v-app-bar-title>
 
-    <v-btn variant="outlined" class="mr-4" @click="emit('alternar-musica')">
+    <v-btn variant="outlined" class="mr-4" @click="alternarMusica">
       Música: {{ musicaActiva ? 'sí' : 'no' }}
     </v-btn>
 

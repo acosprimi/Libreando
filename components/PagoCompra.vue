@@ -1,45 +1,48 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { onMounted, ref } from 'vue'
 
-// Prop: total a pagar (lo calcula el padre)
-defineProps({
-  total: { type: Number, required: true },
-})
-
-// Emits: el hijo avisa si el cliente pagó o canceló
-const emit = defineEmits(['pagar', 'cancelar'])
+const emit = defineEmits(['pago-confirmado', 'cancelar'])
+const carritoStore = useCarritoStore()
+const pedidosStore = usePedidosStore()
+const { total } = storeToRefs(carritoStore)
 
 const formatoCOP = (numero) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(numero)
 
-// Datos propios del formulario (no vienen del padre, por eso son ref locales)
 const metodo = ref('Tarjeta')
+const nombreComprador = ref('')
 const numeroTarjeta = ref('')
 const titular = ref('')
 const celular = ref('')
 const procesando = ref(false)
+const errorPago = ref('')
+const referencia = ref('')
 
-// Número de referencia inventado para pagar en efectivo (6 cifras al azar)
-const referencia = Math.floor(100000 + Math.random() * 900000)
-
-// El botón solo se activa cuando el método elegido tiene sus datos escritos
-const puedePagar = computed(() => {
-  if (metodo.value === 'Tarjeta') {
-    return numeroTarjeta.value !== '' && titular.value !== ''
-  }
-  if (metodo.value === 'Nequi') {
-    return celular.value !== ''
-  }
-  return true // Efectivo no necesita escribir nada
+onMounted(() => {
+  referencia.value = String(Math.floor(100000 + Math.random() * 900000))
 })
 
-// Simulación: espera 1,5 segundos como si estuviera pagando o verificando, y avisa al padre
-function pagar() {
+async function pagar() {
+  errorPago.value = ''
   procesando.value = true
-  setTimeout(() => {
-    procesando.value = false
-    emit('pagar', metodo.value) // avisa y envía el método elegido
-  }, 1500)
+  await new Promise((resolver) => setTimeout(resolver, 1500))
+
+  const resultado = pedidosStore.confirmarPedido({
+    nombre: nombreComprador.value,
+    metodoPago: metodo.value,
+    numeroTarjeta: numeroTarjeta.value,
+    titular: titular.value,
+    celular: celular.value,
+  })
+
+  procesando.value = false
+  if (resultado.error) {
+    errorPago.value = resultado.error
+    return
+  }
+
+  new Audio('/pago.wav').play()
+  emit('pago-confirmado')
 }
 </script>
 
@@ -58,6 +61,13 @@ function pagar() {
           <v-btn value="Nequi">Nequi</v-btn>
           <v-btn value="Efectivo">Efectivo</v-btn>
         </v-btn-toggle>
+
+        <v-text-field
+          v-model="nombreComprador"
+          label="Nombre del comprador"
+          autocomplete="name"
+          variant="outlined"
+        />
 
         <!-- Tarjeta: puede escribir cualquier número -->
         <div v-if="metodo === 'Tarjeta'">
@@ -79,12 +89,15 @@ function pagar() {
         </div>
 
         <p class="text-h6 font-weight-bold mt-2">Total: {{ formatoCOP(total) }}</p>
+        <v-alert v-if="errorPago" type="error" density="compact" class="mt-3">
+          {{ errorPago }}
+        </v-alert>
       </v-card-text>
 
       <v-card-actions>
         <v-btn :disabled="procesando" @click="emit('cancelar')">Cancelar</v-btn>
         <v-spacer />
-        <v-btn color="primary" variant="flat" :disabled="!puedePagar" :loading="procesando" @click="pagar">
+        <v-btn color="primary" variant="flat" :loading="procesando" @click="pagar">
           {{ metodo === 'Efectivo' ? 'Verificar pago' : 'Pagar con ' + metodo }}
         </v-btn>
       </v-card-actions>

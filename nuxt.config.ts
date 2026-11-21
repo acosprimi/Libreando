@@ -1,6 +1,6 @@
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
-  modules: ['vuetify-nuxt-module'],
+  modules: ['vuetify-nuxt-module', '@pinia/nuxt'],
   css: ['~/assets/main.css'],
   vuetify: {
     vuetifyOptions: {

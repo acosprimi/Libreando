@@ -1,16 +1,14 @@
-# Libreando · Tienda de libros (Nuxt 3 + Vuetify)
+# Libreando · Tienda de libros (Nuxt 3 + Vuetify + Pinia)
 
     npm install
     npm run dev
 
-`app.vue` guarda los datos (arreglos `productos` y `carrito`) y los reparte con **props**.
-Los componentes hijos avisan con **emits**. No usa Pinia, provide/inject ni event bus.
+Pinia está registrado como módulo de Nuxt en `nuxt.config.ts`. Los datos compartidos se guardan en tres stores dentro de `stores/`:
 
-    app.vue
-    ├── AppHeader       props: nombreTienda, cantidadItems, musicaActiva     emits: ver-carrito, alternar-musica
-    ├── ListaProductos  props: productos, categorias, categoriaElegida   emits: agregar-producto, cambiar-categoria
-    │   └── ProductoCard props: producto                         emits: agregar-al-carrito
-    ├── CarritoCompra   props: items, abierto   emits: cerrar, incrementar, decrementar, eliminar, finalizar-compra
-    ├── PagoCompra      props: total                             emits: pagar, cancelar
-    ├── FacturaCompra   props: items, numeroFactura, fecha, metodoPago       emits: nueva-compra
-    └── AppFooter       props: nombreTienda, año, contacto
+- `useProductosStore`: catálogo, categorías y existencias; filtra libros y descuenta stock.
+- `useCarritoStore`: guarda solo el ID del libro y su cantidad. Sus getters consultan productos para calcular líneas y totales.
+- `usePedidosStore`: valida y confirma compras, guarda el historial de pedidos de la sesión, descuenta stock y vacía el carrito. También calcula los importes de la factura.
+
+`AppHeader`, `ListaProductos`, `ProductoCard`, `CarritoCompra`, `PagoCompra` y `FacturaCompra` usan los stores directamente; el carrito y los totales ya no viajan por props ni por eventos encadenados. Los estados de interfaz (por ejemplo, si el panel lateral o una ventana están abiertos) siguen siendo locales porque no necesitan compartirse. El formulario envía los datos a una action, donde se validan antes de registrar el pedido.
+
+El estado vive en memoria: se reinicia al recargar la página. El pago es una simulación; no se envían ni se almacenan datos a un proveedor de pagos.
