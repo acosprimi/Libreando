@@ -16,7 +16,7 @@ export const useCarritoStore = defineStore('carrito', {
               cantidad: linea.cantidad,
               producto,
               stock: producto.stock,
-              valorConDescuento: Math.round(producto.valor * (1 - producto.descuento / 100)),
+              valorConDescuento: productosStore.valorConDescuento(producto),
             }]
           : []
       }).map((linea) => ({

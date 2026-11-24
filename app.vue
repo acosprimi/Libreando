@@ -41,8 +41,7 @@ const mostrarFactura = ref(false)
           </v-row>
         </v-card>
 
-        <ListaProductos
-        />
+        <ListaProductos />
 
         <!-- Pago simulado: ventana emergente -->
         <PagoCompra
@@ -66,6 +65,6 @@ const mostrarFactura = ref(false)
       @finalizar-compra="mostrarCarrito = false; mostrarPago = true"
     />
 
-    <AppFooter nombre-tienda="Libreando" :año="2026" contacto="ventas@entrelineas.edu.co" />
+    <AppFooter nombre-tienda="Libreando" :anio="2026" contacto="ventas@entrelineas.edu.co" />
   </v-app>
 </template>

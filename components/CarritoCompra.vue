@@ -6,15 +6,11 @@ defineProps({
 })
 const emit = defineEmits(['finalizar-compra', 'cerrar'])
 const carritoStore = useCarritoStore()
-const { detalleLineas, cantidadItems, subtotalSinDescuento, total, descuentos, estaVacio } = storeToRefs(carritoStore)
+const { detalleLineas, subtotalSinDescuento, total, descuentos, estaVacio } = storeToRefs(carritoStore)
 const errorCarrito = ref('')
 
 function alCambiar(visible) {
   if (visible === false) emit('cerrar')
-}
-
-function valorConDescuento(producto) {
-  return Math.round(producto.valor * (1 - producto.descuento / 100))
 }
 
 const formatoCOP = (numero) =>

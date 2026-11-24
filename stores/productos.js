@@ -22,6 +22,9 @@ export const useProductosStore = defineStore('productos', {
 
   getters: {
     porId: (state) => (id) => state.productos.find((producto) => producto.id === id),
+    // valorConDescuento = valor × (1 − descuento / 100). Única fuente de esta fórmula.
+    valorConDescuento: () => (producto) =>
+      Math.round(producto.valor * (1 - producto.descuento / 100)),
     productosFiltrados(state) {
       if (this.categoriaElegida === 'Todos') return state.productos
       return state.productos.filter((producto) => producto.categoria === this.categoriaElegida)

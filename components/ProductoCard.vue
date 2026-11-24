@@ -5,13 +5,12 @@ const props = defineProps({
   producto: { type: Object, required: true },
 })
 const carritoStore = useCarritoStore()
+const productosStore = useProductosStore()
 const errorAgregar = ref('')
 const cantidadEnCarrito = computed(() => carritoStore.cantidadPorProducto(props.producto.id))
 
-// valorConDescuento = valor × (1 − descuento / 100)
-const valorConDescuento = computed(() => {
-  return Math.round(props.producto.valor * (1 - props.producto.descuento / 100))
-})
+// El cálculo del precio con descuento vive en el store de productos
+const valorConDescuento = computed(() => productosStore.valorConDescuento(props.producto))
 
 // Muestra los números como pesos colombianos
 const formatoCOP = (numero) =>

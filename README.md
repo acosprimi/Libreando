@@ -5,7 +5,7 @@
 
 Pinia está registrado como módulo de Nuxt en `nuxt.config.ts`. Los datos compartidos se guardan en tres stores dentro de `stores/`:
 
-- `useProductosStore`: catálogo, categorías y existencias; filtra libros y descuenta stock.
+- `useProductosStore`: catálogo, categorías y existencias; filtra libros, descuenta stock y calcula el precio con descuento (`valorConDescuento`, única fuente de esa fórmula).
 - `useCarritoStore`: guarda solo el ID del libro y su cantidad. Sus getters consultan productos para calcular líneas y totales.
 - `usePedidosStore`: valida y confirma compras, guarda el historial de pedidos de la sesión, descuenta stock y vacía el carrito. También calcula los importes de la factura.
 
